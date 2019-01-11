@@ -8,12 +8,12 @@ dotnet restore
 
 ### Build for development
 ```
-dotnet build Debug
+dotnet build --configuration Debug
 ```
 
 ### Build and publish for production
 ```
-dotnet build Release
+dotnet build --configuration Release
 dotnet publish --output dist
 ```
 
