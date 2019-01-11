@@ -1,4 +1,5 @@
-# App
+# Scheduler UI in Vue.js
+[![Build Status](https://dev.azure.com/v-echo/Scheduler/_apis/build/status/Vue%20SPA%20CI%20Build?branchName=master)](https://dev.azure.com/v-echo/Scheduler/_build/latest?definitionId=5?branchName=master)
 
 ## Project setup
 ```
