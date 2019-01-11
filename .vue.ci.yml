@@ -1,0 +1,69 @@
+# Node.js with Vue
+# Build a Node.js project that uses Vue.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - Scheduler.Vue/*
+    exclude:
+    - Scheduler.Api/*
+
+jobs:
+- job: Windows
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '10.x'
+    displayName: 'Install Node.js'
+  - script: |
+     cd Scheduler.Vue
+     npm install
+  - script: |
+     cd Scheduler.Vue
+     npm run build
+
+- job: MacOS
+  pool:
+    vmImage: 'macOS-10.13'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '10.x'
+    displayName: 'Install Node.js'
+  - script: |
+      npm --prefix ./Scheduler.Vue install ./Scheduler.Vue
+      npm run --prefix ./Scheduler.Vue build
+
+- job: Linux
+  pool:
+    vmImage: 'Ubuntu-16.04'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '10.x'
+    displayName: 'Install Node.js'
+  - script: |
+      npm --prefix ./Scheduler.Vue install ./Scheduler.Vue
+      npm run --prefix ./Scheduler.Vue build
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(System.DefaultWorkingDirectory)/Scheduler.Vue/dist'
+    condition: and(succeeded(), ne(variables['build.reason'], 'PullRequest'))
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)/Scheduler.Vue/dist'
+      includeRootFolder: false
+    condition: succeeded()
+  - task: AzureRmWebAppDeployment@3
+    inputs:
+      azureSubscription: 'Free Trial (b5741064-18b7-48a3-9c44-cceb2a344e7d)'
+      WebAppName: 'app-vue'
+      Package: $(Build.ArtifactStagingDirectory)/**/*.zip
+    condition: succeeded()

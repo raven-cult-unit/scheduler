@@ -1,0 +1,54 @@
+# ASP.NET Core
+# Build and test ASP.NET Core projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - Scheduler.Api/*
+    exclude:
+    - Scheduler.Vue/*
+
+variables:
+  buildConfiguration: 'Release'
+
+jobs:
+- job: Windows
+  pool:
+    vmImage: 'vs2017-win2016'
+  steps:
+  - task: DotNetCoreInstaller@0
+    inputs:
+      version: '2.2.101'
+  - script: dotnet build Scheduler.Api --configuration $(buildConfiguration)
+  - script: dotnet publish Scheduler.Api --output $(Build.ArtifactStagingDirectory)
+    condition: and(succeeded(), ne(variables['build.reason'], 'PullRequest'))
+  - task: PublishBuildArtifacts@1
+    condition: succeeded()
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
+      includeRootFolder: false
+    condition: succeeded()
+  - task: AzureRmWebAppDeployment@3
+    inputs:
+      azureSubscription: 'Free Trial (b5741064-18b7-48a3-9c44-cceb2a344e7d)'
+      WebAppName: 'app-core'
+      Package: $(Build.ArtifactStagingDirectory)/**/*.zip
+    condition: succeeded()
+  
+- job: MacOS
+  pool:
+    vmImage: 'macOS-10.13'
+  steps:
+  - script: dotnet build Scheduler.Api --configuration $(buildConfiguration)
+
+- job: Linux
+  pool:
+    vmImage: 'Ubuntu-16.04'
+  steps:
+  - script: dotnet build Scheduler.Api --configuration $(buildConfiguration)
